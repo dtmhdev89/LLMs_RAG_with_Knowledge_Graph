@@ -1,3 +1,4 @@
+from langchain_openai import ChatOpenAI
 from langchain_ollama import ChatOllama
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_core.documents import Document
@@ -6,6 +7,7 @@ from dotenv import load_dotenv
 import os
 import asyncio
 from src.database_configs.neo4j_graph_db import Neo4jGraphDb
+from typing import Literal
 
 load_dotenv()
 
@@ -15,13 +17,22 @@ class KnowledgeGraphBuilder:
 
     OLLAMA_CONNECT_URL = os.getenv("OLLAMA_CONNECT_URL")
 
-    def __init__(self):
-        self._llm = ChatOllama(
-            model="llama3.1:8b",
-            base_url=self.OLLAMA_CONNECT_URL,
-            temperature=0,
-            streaming=True
-        )
+    def __init__(
+        self,
+        provider: Literal['openai', 'ollama'],
+        model_name: str,
+    ):
+        if provider == 'ollama':
+            self._llm = ChatOllama(
+                model=model_name,
+                base_url=self.OLLAMA_CONNECT_URL,
+                temperature=0
+            )
+        elif provider == 'openai':
+            self._llm = ChatOpenAI(
+                model=model_name,
+                temperature=0
+            )
 
         self._graph_transformer = LLMGraphTransformer(llm=self.llm)
 
@@ -37,6 +48,11 @@ class KnowledgeGraphBuilder:
     def graph_transformer(self):
         """graph_transformer property"""
         return self._graph_transformer
+    
+    @property
+    def neo4j_graph(self):
+        """neo4j_graph property"""
+        return self._neo4j_graph
 
     async def extract_graph_data(self, text):
         """
@@ -164,5 +180,8 @@ class KnowledgeGraphBuilder:
 
     def store_graph_to_db(self, graph_documents):
         """Store generated graph documents to Neo4j Graph Database"""
-
-        self._neo4j_graph.add_graph_documents(graph_documents)
+        try:
+            print("Save to neo4j db")
+            self._neo4j_graph.add_graph_documents(graph_documents)
+        except Exception as e:
+            print("Failed to store generated graph on neo4f database: ", e)
