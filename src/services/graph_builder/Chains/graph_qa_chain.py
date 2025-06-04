@@ -45,6 +45,7 @@ class GraphQaChain:
                 cypher_prompt=prompt,
                 # return_intermediate_steps = True,
                 return_direct=True,
+                allow_dangerous_requests=True,
             )
 
         return graph_qa_chain
@@ -54,7 +55,7 @@ class GraphQaChain:
         Create a Neo4j Graph Cypher QA Chain. Using this as GraphState so it can access state['prompt']
         """
         
-        prompt_with_context = state["prompt_with_context"] 
+        prompt_with_context = state["prompt_with_context"]
         
         graph_qa_chain = GraphCypherQAChain.from_llm(
             cypher_llm=self.llm, #should use gpt-4 for production
@@ -65,6 +66,7 @@ class GraphQaChain:
             cypher_prompt=prompt_with_context,
             # return_intermediate_steps = True,
             return_direct=True,
+            allow_dangerous_requests=True,
         )
 
         return graph_qa_chain

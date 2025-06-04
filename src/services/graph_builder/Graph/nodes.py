@@ -46,12 +46,14 @@ class Nodes:
         queries = state["subqueries"]
     
         chain_result = self._vector_graph_chain.invoke({
-            "query": queries[0].sub_query},
+                "input": queries[0].sub_query
+            },
         )
+
         # Convert the result to a list of DocumentModel instances
         documents = [
             DocumentModel(**doc.dict())
-            for doc in chain_result['source_documents']
+            for doc in chain_result['context']
         ]
         extracted_data = [
             {
